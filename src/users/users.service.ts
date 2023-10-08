@@ -1,24 +1,71 @@
-import { Injectable } from '@nestjs/common';
-
-// This should be a real class/interface representing a user entity
-export type User = any;
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
+import { Users } from './users.entity';
+import { Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UsersService {
-  private readonly users = [
-    {
-      userId: 1,
-      username: 'john',
-      password: 'changeme',
-    },
-    {
-      userId: 2,
-      username: 'maria',
-      password: 'guess',
-    },
-  ];
+    constructor(
+        @InjectRepository(Users)
+        private readonly userRepository: Repository<Users>,
+    ) { }
 
-  async findOne(username: string): Promise<User | undefined> {
-    return this.users.find((user) => user.username === username);
-  }
+    async comparePasswords(userPassword: string, currentPassword: string) {
+        return await bcrypt.compare(currentPassword, userPassword);
+    }
+
+    async findOne(username: string): Promise<Users | undefined> {
+        return this.userRepository.findOne({ where: { username } });
+    }
+
+    async findByLogin({
+        username,
+        password,
+    }: {
+        username: string;
+        password: string;
+    }): Promise<Users> {
+        const user = await this.findOne(username);
+
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.UNAUTHORIZED);
+        }
+
+        const areEqual = await this.comparePasswords(user.password, password);
+
+        if (!areEqual) {
+            throw new HttpException(
+                'Invalid credentials',
+                HttpStatus.UNAUTHORIZED,
+            );
+        }
+
+        return user;
+    }
+
+    async create({
+        username,
+        password,
+    }: {
+        username: string;
+        password: string;
+    }): Promise<Users> {
+        const userInDb = await this.findOne(username);
+        if (userInDb) {
+            throw new HttpException(
+                'User already exists',
+                HttpStatus.BAD_REQUEST,
+            );
+        }
+
+        const user: Users = this.userRepository.create({
+            username,
+            password,
+        });
+
+        await this.userRepository.save(user);
+
+        return user;
+    }
 }

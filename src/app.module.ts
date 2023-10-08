@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { DevtoolsModule } from '@nestjs/devtools-integration';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-// import { DatabaseModule } from './database/database.module';
+import { DatabaseModule } from './database/database.module';
 @Module({
     imports: [
         DevtoolsModule.register({
@@ -12,7 +12,7 @@ import { UsersModule } from './users/users.module';
         }),
         AuthModule,
         UsersModule,
-        // DatabaseModule,
+        DatabaseModule,
     ],
     controllers: [AppController],
     providers: [AppService],
