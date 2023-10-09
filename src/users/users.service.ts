@@ -9,24 +9,27 @@ export class UsersService {
     constructor(
         @InjectRepository(Users)
         private readonly userRepository: Repository<Users>,
-    ) { }
+    ) {}
 
-    async comparePasswords(userPassword: string, currentPassword: string) {
+    private async comparePasswords(
+        userPassword: string,
+        currentPassword: string,
+    ) {
         return await bcrypt.compare(currentPassword, userPassword);
     }
 
-    async findOne(username: string): Promise<Users | undefined> {
+    async findOneByUsername(username: string): Promise<Users | undefined> {
         return this.userRepository.findOne({ where: { username } });
     }
 
-    async findByLogin({
+    async validateCredentials({
         username,
         password,
     }: {
         username: string;
         password: string;
     }): Promise<Users> {
-        const user = await this.findOne(username);
+        const user = await this.findOneByUsername(username);
 
         if (!user) {
             throw new HttpException('User not found', HttpStatus.UNAUTHORIZED);
@@ -51,7 +54,7 @@ export class UsersService {
         username: string;
         password: string;
     }): Promise<Users> {
-        const userInDb = await this.findOne(username);
+        const userInDb = await this.findOneByUsername(username);
         if (userInDb) {
             throw new HttpException(
                 'User already exists',
