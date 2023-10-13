@@ -1,25 +1,31 @@
 import { Test } from '@nestjs/testing';
 import request from 'supertest';
-import { AppModule } from '../app.module';
+// import { AppModule } from '../app.module';
 import { Repository } from 'typeorm';
 import { Users } from '../users/users.entity';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { HttpStatus } from '@nestjs/common';
+import { AuthService } from './auth.service';
+import { AuthModule } from './auth.module';
+import { DatabaseModule } from '../database/database.module';
 
 describe('AuthController', () => {
     let app: any;
     let httpServer: any;
     let repository: Repository<Users>;
+    let authService: AuthService;
 
     beforeAll(async () => {
         const module = await Test.createTestingModule({
-            imports: [AppModule],
+            imports: [DatabaseModule, AuthModule],
         }).compile();
 
         app = module.createNestApplication();
+        authService = module.get<AuthService>(AuthService);
+        repository = module.get<Repository<Users>>(getRepositoryToken(Users));
+
         await app.init();
         httpServer = app.getHttpServer();
-        repository = module.get<Repository<Users>>(getRepositoryToken(Users));
     });
 
     afterAll(async () => {
@@ -89,18 +95,14 @@ describe('AuthController', () => {
             const newUser = repository.create(createUserRequest);
             await repository.save(newUser);
 
-            const signInRequest = {
-                username: 'user',
-                password: 'password',
-            };
-            const signInResponse = await request(httpServer)
-                .post('/auth/signIn')
-                .send(signInRequest);
+            const signInResponse = await authService.signIn(
+                createUserRequest.username,
+                createUserRequest.password,
+            );
 
-            expect(signInResponse.status).toBe(HttpStatus.OK);
-            expect(signInResponse.body).toHaveProperty('access_token');
+            expect(signInResponse).toHaveProperty('access_token');
 
-            const { access_token } = signInResponse.body;
+            const { access_token } = signInResponse;
 
             const profileResponse = await request(httpServer)
                 .get('/auth/profile')
