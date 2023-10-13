@@ -79,4 +79,45 @@ describe('AuthController', () => {
             expect(signInResponse.body).toHaveProperty('access_token');
         });
     });
+
+    describe('getProfile', () => {
+        it('should get the user profile with valid JWT', async () => {
+            const createUserRequest = {
+                username: 'user',
+                password: 'password',
+            };
+            const newUser = repository.create(createUserRequest);
+            await repository.save(newUser);
+
+            const signInRequest = {
+                username: 'user',
+                password: 'password',
+            };
+            const signInResponse = await request(httpServer)
+                .post('/auth/signIn')
+                .send(signInRequest);
+
+            expect(signInResponse.status).toBe(HttpStatus.OK);
+            expect(signInResponse.body).toHaveProperty('access_token');
+
+            const { access_token } = signInResponse.body;
+
+            const profileResponse = await request(httpServer)
+                .get('/auth/profile')
+                .set('Authorization', `Bearer ${access_token}`);
+
+            expect(profileResponse.status).toBe(HttpStatus.OK);
+            expect(profileResponse.body).toHaveProperty(
+                'username',
+                createUserRequest.username,
+            );
+        });
+
+        it('should not get the user profile without a valid JWT', async () => {
+            const profileResponse =
+                await request(httpServer).get('/auth/profile');
+
+            expect(profileResponse.status).toBe(HttpStatus.UNAUTHORIZED);
+        });
+    });
 });
