@@ -8,6 +8,8 @@ import { AuthService } from './auth.service';
 import { AuthModule } from './auth.module';
 import { DatabaseModule } from '../database/database.module';
 
+const testUsername = 'authControllerE2ETests';
+
 describe('AuthController', () => {
     let app: any;
     let httpServer: any;
@@ -32,13 +34,15 @@ describe('AuthController', () => {
     });
 
     afterEach(async () => {
-        await repository.delete({});
+        await repository.delete({
+            username: testUsername,
+        });
     });
 
     describe('SingIn', () => {
         it('should create a user', async () => {
             const createUserRequest: { username: string; password: string } = {
-                username: 'user',
+                username: testUsername,
                 password: 'password',
             };
             const response = await request(httpServer)
@@ -66,14 +70,14 @@ describe('AuthController', () => {
     describe('signUp', () => {
         it('should create the JWT', async () => {
             const createUserRequest = {
-                username: 'user',
+                username: testUsername,
                 password: 'password',
             };
             const newUser = repository.create(createUserRequest);
             await repository.save(newUser);
 
             const signInRequest = {
-                username: 'user',
+                username: testUsername,
                 password: 'password',
             };
             const signInResponse = await request(httpServer)
@@ -88,7 +92,7 @@ describe('AuthController', () => {
     describe('getProfile', () => {
         it('should get the user profile with valid JWT', async () => {
             const createUserRequest = {
-                username: 'user',
+                username: testUsername,
                 password: 'password',
             };
             const newUser = repository.create(createUserRequest);
