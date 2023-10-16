@@ -7,6 +7,8 @@ import { HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { AuthModule } from './auth.module';
 import { DatabaseModule } from '../database/database.module';
+import { EnvModule } from '../env/env.module';
+import { ConfigService } from '@nestjs/config';
 
 const testUsername = 'authControllerE2ETests';
 
@@ -18,7 +20,8 @@ describe('AuthController', () => {
 
     beforeAll(async () => {
         const module = await Test.createTestingModule({
-            imports: [DatabaseModule, AuthModule],
+            imports: [EnvModule, DatabaseModule, AuthModule],
+            providers: [ConfigService],
         }).compile();
 
         app = module.createNestApplication();
@@ -39,7 +42,7 @@ describe('AuthController', () => {
         });
     });
 
-    describe('SingIn', () => {
+    describe('SingUp', () => {
         it('should create a user', async () => {
             const createUserRequest: { username: string; password: string } = {
                 username: testUsername,
@@ -67,7 +70,7 @@ describe('AuthController', () => {
         });
     });
 
-    describe('signUp', () => {
+    describe('signIn', () => {
         it('should create the JWT', async () => {
             const createUserRequest = {
                 username: testUsername,

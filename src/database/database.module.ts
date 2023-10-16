@@ -1,20 +1,30 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { EnvModule } from '../env/env.module';
+import { EnvService } from '../env/env.service';
 
 @Module({
     imports: [
-        TypeOrmModule.forRoot({
-            type: 'postgres',
-            host: 'localhost',
-            port: 5432,
-            username: 'postgres',
-            password: 'root',
-            database: 'project',
-            entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
-            migrations: [`${__dirname}/../migrations/*{.ts,.js}`],
-            synchronize: false,
-            migrationsRun: true,
-            logging: true,
+        TypeOrmModule.forRootAsync({
+            imports: [EnvModule],
+            inject: [EnvService],
+            useFactory(env: EnvService) {
+                const isTesting = env.get('NODE_ENV') === 'test';
+
+                return {
+                    type: 'postgres',
+                    host: 'localhost',
+                    port: 5432,
+                    username: 'postgres',
+                    password: 'root',
+                    database: isTesting ? 'tests' : 'project',
+                    entities: [`${__dirname}/../**/*.entity{.ts,.js}`],
+                    migrations: [`${__dirname}/../migrations/*{.ts,.js}`],
+                    synchronize: false,
+                    migrationsRun: true,
+                    logging: true,
+                };
+            },
         }),
     ],
 })
