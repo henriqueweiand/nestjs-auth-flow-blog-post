@@ -8,7 +8,6 @@ import { AuthService } from './auth.service';
 import { AuthModule } from './auth.module';
 import { DatabaseModule } from '../database/database.module';
 import { EnvModule } from '../env/env.module';
-import { ConfigService } from '@nestjs/config';
 
 const testUsername = 'authControllerE2ETests';
 
@@ -21,7 +20,6 @@ describe('AuthController', () => {
     beforeAll(async () => {
         const module = await Test.createTestingModule({
             imports: [EnvModule, DatabaseModule, AuthModule],
-            providers: [ConfigService],
         }).compile();
 
         app = module.createNestApplication();
